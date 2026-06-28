@@ -39,7 +39,7 @@ CREATE TABLE plans (
                        stripe_price_id VARCHAR(255) NOT NULL UNIQUE,
 
                        amount NUMERIC(12,2) NOT NULL,
-                       currency CHAR(3) NOT NULL,
+                       currency VARCHAR(3) NOT NULL,
 
                        billing_interval VARCHAR(20) NOT NULL, -- month | year
 
@@ -105,7 +105,7 @@ CREATE TABLE invoices (
                           discount NUMERIC(12,2) NOT NULL DEFAULT 0,
                           total NUMERIC(12,2) NOT NULL,
 
-                          currency CHAR(3) NOT NULL,
+                          currency VARCHAR(3) NOT NULL,
 
                           hosted_invoice_url TEXT,
                           invoice_pdf TEXT,
@@ -143,7 +143,9 @@ CREATE TABLE webhook_events (
 
                                 processed BOOLEAN NOT NULL DEFAULT FALSE,
 
-                                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+
 );
 
 CREATE INDEX idx_webhook_events_processed
