@@ -40,6 +40,9 @@ public class Plan extends BaseEntity {
     @Column(nullable = false, length = 3)
     private String currency;
 
+    @Column(nullable = false, length = 5)
+    private String country;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "billing_interval", nullable = false)
     private BillingInterval billingInterval;

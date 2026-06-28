@@ -41,6 +41,7 @@ CREATE TABLE plans (
 
                        amount NUMERIC(12,2) NOT NULL,
                        currency VARCHAR(3) NOT NULL,
+                       country VARCHAR(255),
 
                        billing_interval VARCHAR(20) NOT NULL, -- month | year
 
