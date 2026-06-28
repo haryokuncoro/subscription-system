@@ -61,7 +61,7 @@ public class PlanController {
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable UUID id) {
 
-        planService.delete(id);
+        planService.deactivate(id);
 
         return ApiResponse.success("Plan deleted successfully");
     }

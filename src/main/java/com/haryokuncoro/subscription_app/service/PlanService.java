@@ -2,6 +2,7 @@ package com.haryokuncoro.subscription_app.service;
 
 import com.haryokuncoro.subscription_app.dto.PlanRequest;
 import com.haryokuncoro.subscription_app.dto.PlanResponse;
+import com.haryokuncoro.subscription_app.dto.StripePlanResult;
 import com.haryokuncoro.subscription_app.entity.Plan;
 import com.haryokuncoro.subscription_app.exception.NotFoundException;
 import com.haryokuncoro.subscription_app.repository.PlanRepository;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class PlanService {
 
     private final PlanRepository planRepository;
+    private final StripeService stripeService;
 
     public List<PlanResponse> findAll() {
 
@@ -38,11 +40,13 @@ public class PlanService {
 
     @Transactional
     public PlanResponse create(PlanRequest request) {
+        StripePlanResult stripeResult = stripeService.createProductAndPrice(request);
+
         Plan plan = Plan.builder()
                 .name(request.getName())
                 .description(request.getDescription())
-                .stripeProductId(request.getStripeProductId())
-                .stripePriceId(request.getStripePriceId())
+                .stripeProductId(stripeResult.productId())
+                .stripePriceId(stripeResult.priceId())
                 .amount(request.getAmount())
                 .currency(request.getCurrency().toUpperCase())
                 .country(request.getCountry().toUpperCase())
@@ -59,11 +63,11 @@ public class PlanService {
 
         Plan plan = planRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Plan not found"));
+        StripePlanResult stripeResult = stripeService.updateProductAndPrice(plan, request);
 
         plan.setName(request.getName());
         plan.setDescription(request.getDescription());
-        plan.setStripeProductId(request.getStripeProductId());
-        plan.setStripePriceId(request.getStripePriceId());
+        plan.setStripePriceId(stripeResult.priceId());
         plan.setAmount(request.getAmount());
         plan.setCurrency(request.getCurrency().toUpperCase());
         plan.setCountry(request.getCountry().toUpperCase());
@@ -73,11 +77,12 @@ public class PlanService {
     }
 
     @Transactional
-    public void delete(UUID id) {
+    public void deactivate(UUID id) {
         Plan plan = planRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Plan not found"));
-
-        planRepository.delete(plan);
+        plan.setActive(false);
+        planRepository.save(plan);
+        stripeService.archiveProductAndPrice(plan);
     }
 
     public PlanResponse toResponse(Plan plan) {
