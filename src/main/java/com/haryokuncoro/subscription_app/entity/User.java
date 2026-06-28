@@ -27,6 +27,9 @@ public class User extends BaseEntity {
     @Column(name = "full_name")
     private String fullName;
 
+    @Column(nullable = false)
+    private String country;
+
     @Column(name = "stripe_customer_id", unique = true)
     private String stripeCustomerId;
 

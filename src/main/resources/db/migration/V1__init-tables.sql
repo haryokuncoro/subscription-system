@@ -13,6 +13,7 @@ CREATE TABLE users (
                        email VARCHAR(255) NOT NULL UNIQUE,
                        password_hash TEXT NOT NULL,
                        full_name VARCHAR(255),
+                       country VARCHAR(255),
 
                        stripe_customer_id VARCHAR(255) UNIQUE,
 

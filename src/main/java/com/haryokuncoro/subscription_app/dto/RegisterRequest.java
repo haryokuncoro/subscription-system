@@ -19,4 +19,7 @@ public class RegisterRequest {
     @NotBlank
     private String fullName;
 
+    @NotBlank
+    private String country;
+
 }
