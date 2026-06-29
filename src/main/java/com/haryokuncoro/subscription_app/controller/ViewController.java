@@ -15,6 +15,11 @@ public class ViewController {
         return "users/index";
     }
 
+    @GetMapping("/users")
+    public String user() {
+        return "users/list";
+    }
+
     @GetMapping("/plans")
     public String plan() {
         return "plans/list";

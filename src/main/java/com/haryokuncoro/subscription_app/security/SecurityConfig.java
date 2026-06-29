@@ -56,6 +56,7 @@ public class SecurityConfig {
                                 "/api/seed/**",
                                 "/v3/api-docs/**",
                                 "/login/**",
+                                "/users/**",
                                 "/plans/**",
                                 "/subscriptions/**",
                                 "/invoices/**",

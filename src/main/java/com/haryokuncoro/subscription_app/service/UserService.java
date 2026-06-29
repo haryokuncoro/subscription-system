@@ -37,6 +37,7 @@ public class UserService {
                 .id(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
+                .country(user.getCountry())
                 .stripeCustomerId(user.getStripeCustomerId())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
