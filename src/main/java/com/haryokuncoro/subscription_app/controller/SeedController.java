@@ -18,8 +18,17 @@ public class SeedController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<Void> create() {
+    public ApiResponse<Void> seedBasicData() {
         seedService.seedData();
+        return ApiResponse.success(
+                "Date seeded successfully"
+        );
+    }
+
+    @PostMapping("/invoices")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<Void> seedInvoice() {
+        seedService.seedInvoice();
         return ApiResponse.success(
                 "Date seeded successfully"
         );
