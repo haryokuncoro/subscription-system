@@ -96,24 +96,24 @@ CREATE TABLE invoices (
                           subscription_id UUID NOT NULL REFERENCES subscriptions(id),
 
                           stripe_invoice_id VARCHAR(255) NOT NULL UNIQUE,
-                          stripe_payment_intent_id VARCHAR(255),
 
                           invoice_number VARCHAR(100),
 
                           status VARCHAR(30) NOT NULL,
 
-                          subtotal NUMERIC(12,2) NOT NULL,
-                          tax NUMERIC(12,2) NOT NULL DEFAULT 0,
-                          discount NUMERIC(12,2) NOT NULL DEFAULT 0,
-                          total NUMERIC(12,2) NOT NULL,
+                          subtotal BIGINT NOT NULL,
+                          tax BIGINT NOT NULL DEFAULT 0,
+                          total BIGINT NOT NULL,
+                          amount_due BIGINT NOT NULL,
+                          amount_paid BIGINT NOT NULL,
 
                           currency VARCHAR(3) NOT NULL,
 
                           hosted_invoice_url TEXT,
                           invoice_pdf TEXT,
 
-                          invoice_date TIMESTAMPTZ,
-                          due_date TIMESTAMPTZ,
+                          period_start TIMESTAMPTZ,
+                          period_end TIMESTAMPTZ,
                           paid_at TIMESTAMPTZ,
 
                           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

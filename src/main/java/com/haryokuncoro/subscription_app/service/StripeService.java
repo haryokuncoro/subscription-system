@@ -25,11 +25,9 @@ import com.stripe.param.SubscriptionUpdateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,8 +37,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional
 public class StripeService {
-    @Value("${stripe.skipSignatureCheck}")
-    private boolean skipSignatureCheck;
     private final UserRepository userRepository;
     private final StripeKeyResolver stripeKeyResolver;
 

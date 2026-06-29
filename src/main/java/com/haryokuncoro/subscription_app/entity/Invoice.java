@@ -34,9 +34,6 @@ public class Invoice extends BaseEntity {
     @Column(name = "stripe_invoice_id", nullable = false, unique = true)
     private String stripeInvoiceId;
 
-    @Column(name = "stripe_payment_intent_id")
-    private String stripePaymentIntentId;
-
     @Column(name = "invoice_number")
     private String invoiceNumber;
 
@@ -45,16 +42,19 @@ public class Invoice extends BaseEntity {
     private InvoiceStatus status;
 
     @Column(nullable = false)
-    private BigDecimal subtotal;
+    private Long subtotal;
 
     @Column(nullable = false)
-    private BigDecimal tax;
+    private Long tax;
 
     @Column(nullable = false)
-    private BigDecimal discount;
+    private Long total;
 
     @Column(nullable = false)
-    private BigDecimal total;
+    private Long amountDue;
+
+    @Column(nullable = false)
+    private Long amountPaid;
 
     @Column(nullable = false, length = 3)
     private String currency;
@@ -65,11 +65,11 @@ public class Invoice extends BaseEntity {
     @Column(name = "invoice_pdf")
     private String invoicePdf;
 
-    @Column(name = "invoice_date")
-    private Instant invoiceDate;
+    @Column(name = "period_start")
+    private Instant periodStart;
 
-    @Column(name = "due_date")
-    private Instant dueDate;
+    @Column(name = "period_end")
+    private Instant periodEnd;
 
     @Column(name = "paid_at")
     private Instant paidAt;
