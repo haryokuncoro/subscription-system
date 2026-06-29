@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,16 +34,14 @@ public class SubscriptionController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<SubscriptionResponse> getById(
-            @PathVariable UUID id) {
+    public ApiResponse<SubscriptionResponse> getById(@PathVariable UUID id) {
 
         return ApiResponse.success(subscriptionService.findById(id));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<SubscriptionResponse> create(
-            @Valid @RequestBody SubscriptionRequest request) {
+    public ApiResponse<SubscriptionResponse> create(@Valid @RequestBody SubscriptionRequest request) {
 
         return ApiResponse.success(
                 "Subscription created successfully",
@@ -51,9 +50,7 @@ public class SubscriptionController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<SubscriptionResponse> update(
-            @PathVariable UUID id,
-            @Valid @RequestBody SubscriptionRequest request) {
+    public ApiResponse<SubscriptionResponse> update(@PathVariable UUID id, @Valid @RequestBody SubscriptionRequest request) {
 
         return ApiResponse.success(
                 "Subscription updated successfully",
@@ -62,10 +59,9 @@ public class SubscriptionController {
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(
-            @PathVariable UUID id) {
+    public ApiResponse<Void> delete(@PathVariable UUID id, @RequestParam boolean immediately) {
 
-        subscriptionService.delete(id);
+        subscriptionService.cancel(id, immediately);
 
         return ApiResponse.success("Subscription deleted successfully");
     }

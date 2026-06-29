@@ -19,6 +19,9 @@ import com.stripe.param.PriceCreateParams;
 import com.stripe.param.PriceUpdateParams;
 import com.stripe.param.ProductCreateParams;
 import com.stripe.param.ProductUpdateParams;
+import com.stripe.param.SubscriptionCancelParams;
+import com.stripe.param.SubscriptionCreateParams;
+import com.stripe.param.SubscriptionUpdateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +29,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -180,5 +185,78 @@ public class StripeService {
             case YEAR -> PriceCreateParams.Recurring.Interval.YEAR;
             default -> throw new IllegalArgumentException("Unsupported billing interval: " + interval);
         };
+    }
+
+    public com.stripe.model.Subscription createSubscription(String stripeCustomerId, String country, String stripePriceId) {
+        String apiKey = stripeKeyResolver.resolveApiKey(country);
+        RequestOptions options = RequestOptions.builder().setApiKey(apiKey).build();
+        try {
+            SubscriptionCreateParams params = SubscriptionCreateParams.builder()
+                    .setCustomer(stripeCustomerId)
+                    .addItem(
+                            SubscriptionCreateParams.Item.builder()
+                                    .setPrice(stripePriceId)
+                                    .build()
+                    )
+                    .setPaymentBehavior(SubscriptionCreateParams.PaymentBehavior.DEFAULT_INCOMPLETE)
+                    .addAllExpand(List.of("latest_invoice.payment_intent"))
+                    .build();
+
+            return com.stripe.model.Subscription.create(params, options);
+        } catch (StripeException e) {
+            throw new StripeOperationException("Failed to create Stripe subscription", e);
+        }
+    }
+
+    public com.stripe.model.Subscription updateSubscription(String country, String stripeSubscriptionId, String newStripePriceId, Boolean cancelAtPeriodEnd) {
+        String apiKey = stripeKeyResolver.resolveApiKey(country);
+        RequestOptions options = RequestOptions.builder().setApiKey(apiKey).build();
+        try {
+            com.stripe.model.Subscription stripeSubscription =
+                    com.stripe.model.Subscription.retrieve(stripeSubscriptionId, options);
+
+            SubscriptionUpdateParams.Builder builder = SubscriptionUpdateParams.builder();
+
+            if (newStripePriceId != null) {
+                String itemId = stripeSubscription.getItems().getData().get(0).getId();
+                builder.addItem(
+                        SubscriptionUpdateParams.Item.builder()
+                                .setId(itemId)
+                                .setPrice(newStripePriceId)
+                                .build()
+                );
+                builder.setProrationBehavior(SubscriptionUpdateParams.ProrationBehavior.CREATE_PRORATIONS);
+            }
+
+            if (cancelAtPeriodEnd != null) {
+                builder.setCancelAtPeriodEnd(cancelAtPeriodEnd);
+            }
+
+            return stripeSubscription.update(builder.build(), options);
+        } catch (StripeException e) {
+            throw new StripeOperationException("Failed to update Stripe subscription", e);
+        }
+    }
+
+    public com.stripe.model.Subscription cancelSubscription(String country, String stripeSubscriptionId, boolean immediately) {
+        String apiKey = stripeKeyResolver.resolveApiKey(country);
+        RequestOptions options = RequestOptions.builder().setApiKey(apiKey).build();
+        try {
+            com.stripe.model.Subscription stripeSubscription =
+                    com.stripe.model.Subscription.retrieve(stripeSubscriptionId, options);
+
+            if (immediately) {
+                SubscriptionCancelParams params = SubscriptionCancelParams.builder()
+                                .build();
+                return stripeSubscription.cancel(params, options);
+            } else {
+                SubscriptionUpdateParams params = SubscriptionUpdateParams.builder()
+                        .setCancelAtPeriodEnd(true)
+                        .build();
+                return stripeSubscription.update(params, options);
+            }
+        } catch (StripeException e) {
+            throw new StripeOperationException("Failed to cancel Stripe subscription", e);
+        }
     }
 }

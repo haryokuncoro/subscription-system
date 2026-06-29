@@ -2,10 +2,12 @@ package com.haryokuncoro.subscription_app.service;
 
 import com.haryokuncoro.subscription_app.dto.SubscriptionRequest;
 import com.haryokuncoro.subscription_app.dto.SubscriptionResponse;
+import com.haryokuncoro.subscription_app.dto.enums.SubscriptionStatus;
 import com.haryokuncoro.subscription_app.entity.Plan;
 import com.haryokuncoro.subscription_app.entity.Subscription;
 import com.haryokuncoro.subscription_app.entity.User;
 import com.haryokuncoro.subscription_app.exception.NotFoundException;
+import com.haryokuncoro.subscription_app.exception.StripeOperationException;
 import com.haryokuncoro.subscription_app.repository.PlanRepository;
 import com.haryokuncoro.subscription_app.repository.SubscriptionRepository;
 import com.haryokuncoro.subscription_app.repository.UserRepository;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +27,7 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
     private final PlanRepository planRepository;
+    private final StripeService stripeService;
 
 
     public List<SubscriptionResponse> findAll() {
@@ -55,13 +59,27 @@ public class SubscriptionService {
                 .orElseThrow(() ->
                         new NotFoundException("Plan not found"));
 
+        if (user.getStripeCustomerId() == null) {
+            try {
+                String stripeCustomerId = stripeService.createCustomer(user);
+                user.setStripeCustomerId(stripeCustomerId);
+                userRepository.save(user);
+            } catch (Exception e) {
+                throw new StripeOperationException("fail to create customer while creating subscription", e);
+            }
+        }
+
+        com.stripe.model.Subscription stripeSubscription =
+                stripeService.createSubscription(user.getStripeCustomerId(), plan.getCountry(), plan.getStripePriceId());
+
         Subscription subscription = Subscription.builder()
                 .user(user)
                 .plan(plan)
-                .status(request.getStatus())
-                .currentPeriodStart(request.getCurrentPeriodStart())
-                .currentPeriodEnd(request.getCurrentPeriodEnd())
-                .cancelAtPeriodEnd(Boolean.TRUE.equals(request.getCancelAtPeriodEnd()))
+                .stripeSubscriptionId(stripeSubscription.getId())
+                .status(mapStripeStatus(stripeSubscription.getStatus()))
+                .currentPeriodStart(Instant.ofEpochSecond(stripeSubscription.getStartDate()))
+                .currentPeriodEnd(Instant.ofEpochSecond(stripeSubscription.getEndedAt()))
+                .cancelAtPeriodEnd(Boolean.TRUE.equals(stripeSubscription.getCancelAtPeriodEnd()))
                 .build();
 
         subscriptionRepository.save(subscription);
@@ -69,40 +87,68 @@ public class SubscriptionService {
         return this.toResponse(subscription);
     }
 
+    private SubscriptionStatus mapStripeStatus(String stripeStatus) {
+        return switch (stripeStatus) {
+            case "active" -> SubscriptionStatus.ACTIVE;
+            case "trialing" -> SubscriptionStatus.TRIALING;
+            case "past_due" -> SubscriptionStatus.PAST_DUE;
+            case "canceled" -> SubscriptionStatus.CANCELED;
+            case "incomplete" -> SubscriptionStatus.INCOMPLETE;
+            case "incomplete_expired" -> SubscriptionStatus.INCOMPLETE_EXPIRED;
+            case "unpaid" -> SubscriptionStatus.UNPAID;
+            default -> throw new IllegalArgumentException("Unknown Stripe status: " + stripeStatus);
+        };
+    }
+
     @Transactional
     public SubscriptionResponse update(UUID id, SubscriptionRequest request) {
 
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() ->
-                        new NotFoundException("Subscription not found"));
+                .orElseThrow(() -> new NotFoundException("Subscription not found"));
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() ->
-                        new NotFoundException("User not found"));
+        String newStripePriceId = null;
+        Plan newPlan = subscription.getPlan();
 
-        Plan plan = planRepository.findById(request.getPlanId())
-                .orElseThrow(() ->
-                        new NotFoundException("Plan not found"));
+        if (request.getPlanId() != null && !request.getPlanId().equals(subscription.getPlan().getId())) {
+            newPlan = planRepository.findById(request.getPlanId())
+                    .orElseThrow(() -> new NotFoundException("Plan not found"));
+            newStripePriceId = newPlan.getStripePriceId();
+        }
 
-        subscription.setUser(user);
-        subscription.setPlan(plan);
-        subscription.setStatus(request.getStatus());
-        subscription.setCurrentPeriodStart(request.getCurrentPeriodStart());
-        subscription.setCurrentPeriodEnd(request.getCurrentPeriodEnd());
-        subscription.setCancelAtPeriodEnd(
-                Boolean.TRUE.equals(request.getCancelAtPeriodEnd()));
+        com.stripe.model.Subscription stripeSubscription = stripeService.updateSubscription(
+                subscription.getPlan().getCountry(),
+                subscription.getStripeSubscriptionId(),
+                newStripePriceId,
+                request.getCancelAtPeriodEnd()
+        );
+
+        subscription.setPlan(newPlan);
+        subscription.setStatus(mapStripeStatus(stripeSubscription.getStatus()));
+        subscription.setCurrentPeriodStart(Instant.ofEpochSecond(stripeSubscription.getStartDate()));
+        subscription.setCurrentPeriodEnd(Instant.ofEpochSecond(stripeSubscription.getEndedAt()));
+        subscription.setCancelAtPeriodEnd(Boolean.TRUE.equals(stripeSubscription.getCancelAtPeriodEnd()));
+
+        subscriptionRepository.save(subscription);
 
         return this.toResponse(subscription);
     }
 
     @Transactional
-    public void delete(UUID id) {
+    public SubscriptionResponse cancel(UUID id, boolean immediately) {
 
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() ->
-                        new NotFoundException("Subscription not found"));
+                .orElseThrow(() -> new NotFoundException("Subscription not found"));
 
-        subscriptionRepository.delete(subscription);
+        com.stripe.model.Subscription stripeSubscription =
+                stripeService.cancelSubscription(subscription.getPlan().getCountry(), subscription.getStripeSubscriptionId(), immediately);
+
+        subscription.setStatus(SubscriptionStatus.CANCELED);
+        subscription.setCancelAtPeriodEnd(Boolean.TRUE.equals(stripeSubscription.getCancelAtPeriodEnd()));
+        subscription.setCurrentPeriodEnd(Instant.ofEpochSecond(stripeSubscription.getStartDate()));
+
+        subscriptionRepository.save(subscription);
+
+        return this.toResponse(subscription);
     }
 
     public SubscriptionResponse toResponse(Subscription subscription) {

@@ -1,6 +1,5 @@
 package com.haryokuncoro.subscription_app.dto;
 
-import com.haryokuncoro.subscription_app.dto.enums.SubscriptionStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,9 +16,6 @@ public class SubscriptionRequest {
 
     @NotNull
     private UUID planId;
-
-    @NotNull
-    private SubscriptionStatus status;
 
     private Instant currentPeriodStart;
 
