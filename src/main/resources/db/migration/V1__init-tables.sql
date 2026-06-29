@@ -39,7 +39,7 @@ CREATE TABLE plans (
                        stripe_product_id VARCHAR(255) NOT NULL UNIQUE,
                        stripe_price_id VARCHAR(255) NOT NULL UNIQUE,
 
-                       amount NUMERIC(12,2) NOT NULL,
+                       amount_cents BIGINT NOT NULL,
                        currency VARCHAR(3) NOT NULL,
                        country VARCHAR(255),
 

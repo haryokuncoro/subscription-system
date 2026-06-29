@@ -12,8 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-
 @Entity
 @Table(name = "plans")
 @Getter
@@ -34,8 +32,8 @@ public class Plan extends BaseEntity {
     @Column(name = "stripe_price_id", nullable = false, unique = true)
     private String stripePriceId;
 
-    @Column(nullable = false)
-    private BigDecimal amount;
+    @Column(name = "amount_cents", nullable = false)
+    private Long amount;
 
     @Column(nullable = false, length = 3)
     private String currency;

@@ -19,12 +19,6 @@ public class PlanRequest {
 
     private String description;
 
-    @NotBlank
-    private String stripeProductId;
-
-    @NotBlank
-    private String stripePriceId;
-
     @NotNull
     @Positive
     private BigDecimal amount;

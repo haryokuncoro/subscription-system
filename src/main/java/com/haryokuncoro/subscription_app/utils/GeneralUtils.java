@@ -14,4 +14,9 @@ public class GeneralUtils {
                 .setScale(0, RoundingMode.HALF_UP)
                 .longValueExact();
     }
+    public static BigDecimal toDollars(Long centAmount) {
+        return BigDecimal.valueOf(centAmount)
+                .divide(BigDecimal.valueOf(100))
+                .setScale(2, RoundingMode.HALF_UP);
+    }
 }

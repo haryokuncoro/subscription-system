@@ -143,7 +143,7 @@ public class StripeService {
     }
 
     private boolean priceNeedsUpdate(Plan existingPlan, PlanRequest request) {
-        long existingAmountCents = GeneralUtils.toCents(existingPlan.getAmount());
+        long existingAmountCents = existingPlan.getAmount();
         long newAmountCents = GeneralUtils.toCents(request.getAmount());
         return existingAmountCents != newAmountCents
                 || !existingPlan.getCurrency().equalsIgnoreCase(request.getCurrency())

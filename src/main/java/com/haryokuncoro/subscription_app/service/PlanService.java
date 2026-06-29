@@ -6,11 +6,13 @@ import com.haryokuncoro.subscription_app.dto.StripePlanResult;
 import com.haryokuncoro.subscription_app.entity.Plan;
 import com.haryokuncoro.subscription_app.exception.NotFoundException;
 import com.haryokuncoro.subscription_app.repository.PlanRepository;
+import com.haryokuncoro.subscription_app.utils.GeneralUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,20 +43,20 @@ public class PlanService {
     @Transactional
     public PlanResponse create(PlanRequest request) {
         StripePlanResult stripeResult = stripeService.createProductAndPrice(request);
-
+        Long amount = GeneralUtils.toCents(request.getAmount());
         Plan plan = Plan.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .stripeProductId(stripeResult.productId())
                 .stripePriceId(stripeResult.priceId())
-                .amount(request.getAmount())
+                .amount(amount)
                 .currency(request.getCurrency().toUpperCase())
                 .country(request.getCountry().toUpperCase())
                 .billingInterval(request.getBillingInterval())
                 .active(request.getActive())
                 .build();
 
-        planRepository.save(plan);
+        plan = planRepository.save(plan);
         return this.toResponse(plan);
     }
 
@@ -64,11 +66,11 @@ public class PlanService {
         Plan plan = planRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Plan not found"));
         StripePlanResult stripeResult = stripeService.updateProductAndPrice(plan, request);
-
+        Long amount = GeneralUtils.toCents(request.getAmount());
         plan.setName(request.getName());
         plan.setDescription(request.getDescription());
         plan.setStripePriceId(stripeResult.priceId());
-        plan.setAmount(request.getAmount());
+        plan.setAmount(amount);
         plan.setCurrency(request.getCurrency().toUpperCase());
         plan.setCountry(request.getCountry().toUpperCase());
         plan.setBillingInterval(request.getBillingInterval());
@@ -86,14 +88,14 @@ public class PlanService {
     }
 
     public PlanResponse toResponse(Plan plan) {
-
+        BigDecimal amount = GeneralUtils.toDollars(plan.getAmount());
         return PlanResponse.builder()
                 .id(plan.getId())
                 .name(plan.getName())
                 .description(plan.getDescription())
                 .stripeProductId(plan.getStripeProductId())
                 .stripePriceId(plan.getStripePriceId())
-                .amount(plan.getAmount())
+                .amount(amount)
                 .currency(plan.getCurrency())
                 .country(plan.getCountry())
                 .billingInterval(plan.getBillingInterval())
