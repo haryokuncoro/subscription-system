@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark"
+     th:fragment="navbar(activeMenu)">
+    <div class="container-fluid">
+
+        <a class="navbar-brand" href="#">
+            Subscription System
+        </a>
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+
+            <ul class="navbar-nav me-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link"
+                       th:classappend="${activeMenu == 'plans'} ? ' active'"
+                       href="/plans">
+                        Plans
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link"
+                       th:classappend="${activeMenu == 'subscriptions'} ? ' active'"
+                       href="/subscriptions">
+                        Subscriptions
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link"
+                       th:classappend="${activeMenu == 'invoices'} ? ' active'"
+                       href="/invoices">
+                        Invoices
+                    </a>
+                </li>
+
+            </ul>
+
+            <button
+                    class="btn btn-outline-light"
+                    onclick="logout()">
+                Logout
+            </button>
+
+        </div>
+
+    </div>
+</nav>
+
+
+<script th:src="@{/js/api.js}"></script>
+
+</body>
+</html>
