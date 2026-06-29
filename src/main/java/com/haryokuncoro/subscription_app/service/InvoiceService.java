@@ -77,6 +77,7 @@ public class InvoiceService {
     private Long getTax(com.stripe.model.Invoice stripeInvoice){
         List<com.stripe.model.Invoice.TotalTax> taxes = stripeInvoice.getTotalTaxes();
         Long total = 0L;
+        if(taxes == null) return total;
         for(com.stripe.model.Invoice.TotalTax tax: taxes){
             total += tax.getAmount();
         }
