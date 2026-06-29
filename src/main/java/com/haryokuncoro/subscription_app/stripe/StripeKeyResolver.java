@@ -13,8 +13,8 @@ public class StripeKeyResolver {
     public String resolveApiKey(String country) {
         return switch (country.toLowerCase()) {
             case "singapore" -> properties.apiKeySG();
-            case "usa" -> properties.apiKeyUS();
-            case "indonesia" -> properties.apiKeyID();
+            case "hong kong" -> properties.apiKeyHK();
+            case "malaysia" -> properties.apiKeyMY();
             default -> throw new IllegalStateException("Unexpected value: " + country);
         };
     }
