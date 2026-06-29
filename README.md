@@ -4,7 +4,7 @@ A Spring Boot REST API for managing users, subscription plans, subscriptions, an
 
 ## Tech Stack
 
-- Java 21
+- Java 17
 - Spring Boot 3
 - Spring Security
 - Spring Data JPA
@@ -21,6 +21,7 @@ A Spring Boot REST API for managing users, subscription plans, subscriptions, an
 - User Management
 - Subscription Plan Management
 - Subscription Management
+- Stripe Invoice Integration
 - Stripe Webhook Integration
 - Database Migration (Flyway)
 - Seed Development Data
@@ -215,7 +216,13 @@ Create Request
 ```
 
 ---
+# Invoice APIs
 
+| Method | Endpoint                                  |
+|---------|-------------------------------------------|
+| GET | /api/invoices                             |
+
+---
 # Stripe Webhook
 
 Stripe should send webhook events to:
