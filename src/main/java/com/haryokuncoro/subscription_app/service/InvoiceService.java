@@ -1,19 +1,26 @@
 package com.haryokuncoro.subscription_app.service;
 
+import com.haryokuncoro.subscription_app.dto.GetInvoiceResponse;
 import com.haryokuncoro.subscription_app.dto.enums.InvoiceStatus;
+import com.haryokuncoro.subscription_app.dto.spec.InvoiceSpecification;
 import com.haryokuncoro.subscription_app.entity.Invoice;
 import com.haryokuncoro.subscription_app.entity.Subscription;
 import com.haryokuncoro.subscription_app.exception.NotFoundException;
 import com.haryokuncoro.subscription_app.repository.InvoiceRepository;
 import com.haryokuncoro.subscription_app.repository.SubscriptionRepository;
+import com.haryokuncoro.subscription_app.utils.GeneralUtils;
 import com.stripe.model.Event;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Service @Slf4j
 @RequiredArgsConstructor
@@ -21,6 +28,64 @@ public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
     private final SubscriptionRepository subscriptionRepository;
+
+    public Page<GetInvoiceResponse> search(
+            UUID userId,
+            UUID subscriptionId,
+            String stripeInvoiceId,
+            String status,
+            Pageable pageable) {
+
+        Specification<Invoice> spec = null;
+
+        if (userId != null) {
+            spec = Specification.allOf(
+                    spec,
+                    InvoiceSpecification.hasUser(userId)
+            );
+        }
+        if (subscriptionId != null) {
+            spec = Specification.allOf(
+                    spec,
+                    InvoiceSpecification.hasSubscription(subscriptionId)
+            );
+        }
+
+        if (stripeInvoiceId != null) {
+            spec = Specification.allOf(
+                    spec,
+                    InvoiceSpecification.hasStripeInvoiceId(stripeInvoiceId)
+            );
+        }
+
+        if (status != null) {
+            spec = Specification.allOf(
+                    spec,
+                    InvoiceSpecification.hasStatus(status)
+            );
+        }
+
+        return invoiceRepository.findAll(spec, pageable)
+                .map(this::toResponse);
+    }
+
+    public GetInvoiceResponse toResponse(Invoice invoice) {
+        Subscription subscription = invoice.getSubscription();
+        return GetInvoiceResponse.builder()
+                .userId(subscription.getUser().getId())
+                .subscriptionId(subscription.getId())
+                .planId(subscription.getPlan().getId())
+                .stripeInvoiceId(invoice.getStripeInvoiceId())
+                .invoiceNumber(invoice.getInvoiceNumber())
+                .subtotal(GeneralUtils.toDollars(invoice.getSubtotal()))
+                .total(GeneralUtils.toDollars(invoice.getTotal()))
+                .tax(GeneralUtils.toDollars(invoice.getTax()))
+                .amountDue(GeneralUtils.toDollars(invoice.getAmountDue()))
+                .amountPaid(GeneralUtils.toDollars(invoice.getAmountPaid()))
+                .status(invoice.getStatus())
+                .build();
+    }
+
 
 
     @Transactional
