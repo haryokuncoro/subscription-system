@@ -39,7 +39,7 @@ async function loadUsers() {
                 </small>
 
             </td>
-            <td>${user.active}</td>
+            <td>${statusBadge(user.active)}</td>
 
             <td>
 
@@ -68,6 +68,20 @@ async function loadUsers() {
     });
 
 }
+
+function statusBadge(status) {
+
+    switch (status) {
+        case true:
+            return '<span class="badge bg-success">ACTIVE</span>';
+        case false:
+            return '<span class="badge bg-danger">INACTIVE</span>';
+        default:
+            return `<span class="badge bg-light text-dark">${status}</span>`;
+    }
+
+}
+
 
 function clearForm() {
 

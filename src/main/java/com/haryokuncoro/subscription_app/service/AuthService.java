@@ -36,6 +36,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
+                .active(true)
                 .country(request.getCountry().toLowerCase())
                 .build();
 
