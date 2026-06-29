@@ -8,13 +8,14 @@ import com.haryokuncoro.subscription_app.repository.InvoiceRepository;
 import com.haryokuncoro.subscription_app.repository.SubscriptionRepository;
 import com.stripe.model.Event;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 
-@Service
+@Service @Slf4j
 @RequiredArgsConstructor
 public class InvoiceService {
 
@@ -24,10 +25,14 @@ public class InvoiceService {
 
     @Transactional
     public void syncFromStripeEvent(Event event) {
-        com.stripe.model.Invoice stripeInvoice =
-                (com.stripe.model.Invoice) event.getDataObjectDeserializer()
-                        .getObject()
-                        .orElseThrow(() -> new IllegalStateException("Could not deserialize invoice"));
+        com.stripe.model.Invoice stripeInvoice;
+        try {
+            stripeInvoice = (com.stripe.model.Invoice) event.getDataObjectDeserializer()
+                            .deserializeUnsafe();
+        }catch (Exception e){
+            log.error("fail to deserialize invoice object", e);
+            return;
+        }
 
         String stripeSubscriptionId = extractSubscriptionId(stripeInvoice);
 
