@@ -134,7 +134,7 @@ public class StripeService {
     private void updateProduct(String stripeProductId, PlanRequest request) throws StripeException {
         String apiKey = stripeKeyResolver.resolveApiKey(request.getCountry());
         RequestOptions options = RequestOptions.builder().setApiKey(apiKey).build();
-        Product product = Product.retrieve(stripeProductId);
+        Product product = Product.retrieve(stripeProductId, options);
         ProductUpdateParams params = ProductUpdateParams.builder()
                 .setName(request.getName())
                 .setDescription(request.getDescription())

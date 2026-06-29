@@ -11,10 +11,11 @@ import java.util.UUID;
 @Data @Builder
 public class GetInvoiceResponse {
     private UUID userId;
-
+    private String userName;
     private UUID subscriptionId;
 
     private UUID planId;
+    private String planName;
 
     private String stripeInvoiceId;
 

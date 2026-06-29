@@ -71,15 +71,15 @@ function renderTable(pageData) {
 
         <tr>
 
-            <td>${invoice.invoiceNumber}</td>
+            <td>${invoice.stripeInvoiceId}</td>
+            <td>${invoice.userName}</td>
+            <td>${invoice.planName}</td>
 
             <td>${statusBadge(invoice.status)}</td>
 
             <td>${invoice.total}</td>
 
             <td>${invoice.amountPaid}</td>
-
-            <td>${invoice.currency}</td>
 
             <td>
 

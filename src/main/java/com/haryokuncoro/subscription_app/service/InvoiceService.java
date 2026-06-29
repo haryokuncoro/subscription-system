@@ -73,8 +73,10 @@ public class InvoiceService {
         Subscription subscription = invoice.getSubscription();
         return GetInvoiceResponse.builder()
                 .userId(subscription.getUser().getId())
+                .userName(subscription.getUser().getFullName())
                 .subscriptionId(subscription.getId())
                 .planId(subscription.getPlan().getId())
+                .planName(subscription.getPlan().getName())
                 .stripeInvoiceId(invoice.getStripeInvoiceId())
                 .invoiceNumber(invoice.getInvoiceNumber())
                 .subtotal(GeneralUtils.toDollars(invoice.getSubtotal()))
