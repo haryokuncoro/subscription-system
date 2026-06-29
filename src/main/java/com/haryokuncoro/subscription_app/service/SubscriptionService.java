@@ -1,8 +1,12 @@
 package com.haryokuncoro.subscription_app.service;
 
+import com.haryokuncoro.subscription_app.dto.GetInvoiceResponse;
 import com.haryokuncoro.subscription_app.dto.SubscriptionRequest;
 import com.haryokuncoro.subscription_app.dto.SubscriptionResponse;
 import com.haryokuncoro.subscription_app.dto.enums.SubscriptionStatus;
+import com.haryokuncoro.subscription_app.dto.spec.InvoiceSpecification;
+import com.haryokuncoro.subscription_app.dto.spec.SubscriptionSpecification;
+import com.haryokuncoro.subscription_app.entity.Invoice;
 import com.haryokuncoro.subscription_app.entity.Plan;
 import com.haryokuncoro.subscription_app.entity.Subscription;
 import com.haryokuncoro.subscription_app.entity.User;
@@ -13,6 +17,9 @@ import com.haryokuncoro.subscription_app.repository.SubscriptionRepository;
 import com.haryokuncoro.subscription_app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,14 +37,38 @@ public class SubscriptionService {
     private final StripeService stripeService;
 
 
-    public List<SubscriptionResponse> findAll() {
+    public Page<SubscriptionResponse> search(
+            UUID userId,
+            UUID planId,
+            String status,
+            Pageable pageable) {
 
-        return subscriptionRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        Specification<Subscription> spec = null;
+
+        if (userId != null) {
+            spec = Specification.allOf(
+                    spec,
+                    SubscriptionSpecification.hasUser(userId)
+            );
+        }
+
+        if (planId != null) {
+            spec = Specification.allOf(
+                    spec,
+                    SubscriptionSpecification.hasPlan(planId)
+            );
+        }
+
+        if (status != null) {
+            spec = Specification.allOf(
+                    spec,
+                    SubscriptionSpecification.hasStatus(status)
+            );
+        }
+
+        return subscriptionRepository.findAll(spec, pageable)
+                .map(this::toResponse);
     }
-
 
     public SubscriptionResponse findById(UUID id) {
 

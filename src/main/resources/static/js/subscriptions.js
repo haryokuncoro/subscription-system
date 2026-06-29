@@ -1,5 +1,9 @@
 let modal;
 
+let page = 0;
+
+let totalPages = 0;
+
 document.addEventListener("DOMContentLoaded", async () => {
 
     modal = new bootstrap.Modal(
@@ -10,111 +14,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadPlans();
 
-    await loadSubscriptions();
+    await searchSubscriptions();
 
 });
-
-async function loadUsers() {
-
-    const response = await api("/api/users");
-
-    const select = document.getElementById("userId");
-
-    select.innerHTML = "";
-
-    response.data.forEach(user => {
-
-        select.innerHTML += `
-            <option value="${user.id}">
-                ${user.email}
-            </option>
-        `;
-
-    });
-
-}
-
-async function loadPlans() {
-
-    const response = await api("/api/plans");
-
-    const select = document.getElementById("planId");
-
-    select.innerHTML = "";
-
-    response.data.forEach(plan => {
-
-        select.innerHTML += `
-            <option value="${plan.id}">
-                ${plan.name}
-            </option>
-        `;
-
-    });
-
-}
-
-async function loadSubscriptions() {
-
-    try {
-
-        const response = await api("/api/subscriptions");
-
-        const tbody = document.getElementById("tableBody");
-
-        tbody.innerHTML = "";
-
-        response.data.forEach(subscription => {
-
-            tbody.innerHTML += `
-            <tr>
-
-                <td>${subscription.userEmail}</td>
-
-                <td>${subscription.planName}</td>
-
-                <td>${statusBadge(subscription.status)}</td>
-
-                <td>${formatDate(subscription.currentPeriodStart)}</td>
-
-                <td>${formatDate(subscription.currentPeriodEnd)}</td>
-
-                <td>
-                    ${subscription.cancelAtPeriodEnd ? "Yes" : "No"}
-                </td>
-
-                <td>
-
-                    <button
-                        class="btn btn-warning btn-sm"
-                        onclick="edit('${subscription.id}')">
-
-                        Edit
-
-                    </button>
-
-                    <button
-                        class="btn btn-danger btn-sm"
-                        onclick="removeSubscription('${subscription.id}')">
-
-                        Delete
-
-                    </button>
-
-                </td>
-
-            </tr>
-            `;
-
-        });
-
-    } catch (e) {
-
-        alert(e.message);
-
-    }
-
-}
 
 function statusBadge(status) {
 
@@ -124,7 +26,7 @@ function statusBadge(status) {
             return '<span class="badge bg-success">ACTIVE</span>';
 
         case "TRIALING":
-            return '<span class="badge bg-info">TRIALING</span>';
+            return '<span class="badge bg-info text-dark">TRIALING</span>';
 
         case "PAST_DUE":
             return '<span class="badge bg-warning text-dark">PAST DUE</span>';
@@ -174,32 +76,100 @@ function toInputDateTime(date) {
 
 }
 
-function clearForm() {
+async function loadUsers() {
 
-    document.getElementById("id").value = "";
+    const response = await api("/api/users");
 
-    document.getElementById("userId").selectedIndex = 0;
+    const filter = document.getElementById("filterUserId");
 
-    document.getElementById("planId").selectedIndex = 0;
+    const modal = document.getElementById("userId");
 
-    document.getElementById("currentPeriodStart").value = "";
+    filter.innerHTML = '<option value="">All Users</option>';
 
-    document.getElementById("currentPeriodEnd").value = "";
+    modal.innerHTML = "";
 
-    document.getElementById("cancelAtPeriodEnd").checked = false;
+    response.data.forEach(user => {
+
+        filter.innerHTML += `
+            <option value="${user.id}">
+                ${user.email}
+            </option>
+        `;
+
+        modal.innerHTML += `
+            <option value="${user.id}">
+                ${user.email}
+            </option>
+        `;
+
+    });
 
 }
 
-function openCreateModal() {
+async function loadPlans() {
 
-    clearForm();
+    const response = await api("/api/plans");
 
-    document.getElementById("modalTitle").innerText = "Create Subscription";
+    const filter = document.getElementById("filterPlanId");
 
-    modal.show();
+    const modal = document.getElementById("planId");
+
+    filter.innerHTML = '<option value="">All Plans</option>';
+
+    modal.innerHTML = "";
+
+    response.data.forEach(plan => {
+
+        filter.innerHTML += `
+            <option value="${plan.id}">
+                ${plan.name}
+            </option>
+        `;
+
+        modal.innerHTML += `
+            <option value="${plan.id}">
+                ${plan.name}
+            </option>
+        `;
+
+    });
 
 }
 
+async function searchSubscriptions() {
+
+    const params = new URLSearchParams();
+
+    params.append("page", page);
+
+    params.append("size", document.getElementById("pageSize").value);
+
+    params.append("sortBy", "createdAt");
+
+    params.append("direction", "desc");
+
+    const userId = document.getElementById("filterUserId").value;
+
+    const planId = document.getElementById("filterPlanId").value;
+
+    const status = document.getElementById("filterStatus").value;
+
+    if (userId)
+        params.append("userId", userId);
+
+    if (planId)
+        params.append("planId", planId);
+
+    if (status)
+        params.append("status", status);
+
+    const response = await api(
+        "/api/subscriptions?" + params.toString()
+    );
+
+    renderTable(response.data);
+
+}
 async function edit(id) {
 
     try {
@@ -208,13 +178,17 @@ async function edit(id) {
 
         const subscription = response.data;
 
-        document.getElementById("modalTitle").innerText = "Edit Subscription";
+        document.getElementById("modalTitle").innerText =
+            "Edit Subscription";
 
-        document.getElementById("id").value = subscription.id;
+        document.getElementById("id").value =
+            subscription.id;
 
-        document.getElementById("userId").value = subscription.userId;
+        document.getElementById("userId").value =
+            subscription.userId;
 
-        document.getElementById("planId").value = subscription.planId;
+        document.getElementById("planId").value =
+            subscription.planId;
 
         document.getElementById("currentPeriodStart").value =
             toInputDateTime(subscription.currentPeriodStart);
@@ -235,71 +209,10 @@ async function edit(id) {
 
 }
 
-async function save() {
-
-    const id = document.getElementById("id").value;
-
-    const body = {
-
-        userId: document.getElementById("userId").value,
-
-        planId: document.getElementById("planId").value,
-
-        currentPeriodStart:
-            document.getElementById("currentPeriodStart").value
-                ? new Date(document.getElementById("currentPeriodStart").value).toISOString()
-                : null,
-
-        currentPeriodEnd:
-            document.getElementById("currentPeriodEnd").value
-                ? new Date(document.getElementById("currentPeriodEnd").value).toISOString()
-                : null,
-
-        cancelAtPeriodEnd:
-        document.getElementById("cancelAtPeriodEnd").checked
-
-    };
-
-    try {
-
-        if (id) {
-
-            await api(`/api/subscriptions/${id}`, {
-
-                method: "PUT",
-
-                body: JSON.stringify(body)
-
-            });
-
-        } else {
-
-            await api("/api/subscriptions", {
-
-                method: "POST",
-
-                body: JSON.stringify(body)
-
-            });
-
-        }
-
-        modal.hide();
-
-        await loadSubscriptions();
-
-    } catch (e) {
-
-        alert(e.message);
-
-    }
-
-}
-
 async function removeSubscription(id) {
 
     const immediately = confirm(
-        "Press OK to cancel immediately.\nPress Cancel to cancel at period end."
+        "OK = Cancel Immediately\nCancel = Cancel At Period End"
     );
 
     try {
@@ -311,12 +224,117 @@ async function removeSubscription(id) {
             }
         );
 
-        await loadSubscriptions();
+        await searchSubscriptions();
 
     } catch (e) {
 
         alert(e.message);
 
     }
+
+}
+
+function renderTable(data) {
+
+    page = data.number;
+
+    totalPages = data.totalPages;
+
+    document.getElementById("pageInfo").innerText =
+        `Page ${page + 1} of ${totalPages}`;
+
+    const tbody = document.getElementById("tableBody");
+
+    tbody.innerHTML = "";
+
+    data.content.forEach(subscription => {
+
+        tbody.innerHTML += `
+
+        <tr>
+
+            <td>${subscription.userEmail}</td>
+
+            <td>${subscription.planName}</td>
+
+            <td>${statusBadge(subscription.status)}</td>
+
+            <td>
+
+                ${formatDate(subscription.currentPeriodStart)}
+
+                <br>
+
+                ${formatDate(subscription.currentPeriodEnd)}
+
+            </td>
+
+            <td>
+
+                ${
+            subscription.cancelAtPeriodEnd
+                ? '<span class="badge bg-warning text-dark">Yes</span>'
+                : '<span class="badge bg-success">No</span>'
+        }
+
+            </td>
+
+            <td>
+
+                <small>
+
+                    ${subscription.stripeSubscriptionId}
+
+                </small>
+
+            </td>
+
+            <td>
+
+                <button
+                    class="btn btn-warning btn-sm"
+                    onclick="edit('${subscription.id}')">
+
+                    Edit
+
+                </button>
+
+                <button
+                    class="btn btn-danger btn-sm"
+                    onclick="removeSubscription('${subscription.id}')">
+
+                    Delete
+
+                </button>
+
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+}
+
+function previousPage() {
+
+    if (page === 0)
+        return;
+
+    page--;
+
+    searchSubscriptions();
+
+}
+
+function nextPage() {
+
+    if (page >= totalPages - 1)
+        return;
+
+    page++;
+
+    searchSubscriptions();
 
 }

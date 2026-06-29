@@ -35,7 +35,96 @@
 
     </div>
 
-    <table class="table table-bordered table-hover align-middle">
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-3">
+
+                    <label>User</label>
+
+                    <select
+                            id="filterUserId"
+                            class="form-select">
+
+                        <option value="">All Users</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <label>Plan</label>
+
+                    <select
+                            id="filterPlanId"
+                            class="form-select">
+
+                        <option value="">All Plans</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <label>Status</label>
+
+                    <select
+                            id="filterStatus"
+                            class="form-select">
+
+                        <option value="">All</option>
+                        <option>ACTIVE</option>
+                        <option>TRIALING</option>
+                        <option>PAST_DUE</option>
+                        <option>CANCELED</option>
+                        <option>UNPAID</option>
+                        <option>PAUSED</option>
+                        <option>INCOMPLETE</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <label>Page Size</label>
+
+                    <select
+                            id="pageSize"
+                            class="form-select">
+
+                        <option>10</option>
+                        <option>25</option>
+                        <option>50</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+
+                    <button
+                            class="btn btn-primary w-100"
+                            onclick="searchSubscriptions()">
+
+                        Search
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <table class="table table-bordered table-hover">
 
         <thead class="table-light">
 
@@ -47,11 +136,11 @@
 
             <th>Status</th>
 
-            <th>Period Start</th>
-
-            <th>Period End</th>
+            <th>Current Period</th>
 
             <th>Cancel At Period End</th>
+
+            <th>Stripe Subscription</th>
 
             <th width="180">
                 Action
@@ -61,9 +150,35 @@
 
         </thead>
 
-        <tbody id="tableBody"></tbody>
+        <tbody id="tableBody">
+
+        </tbody>
 
     </table>
+
+    <div class="d-flex justify-content-between align-items-center">
+
+        <button
+                class="btn btn-secondary"
+                onclick="previousPage()">
+
+            Previous
+
+        </button>
+
+        <span id="pageInfo">
+
+        </span>
+
+        <button
+                class="btn btn-secondary"
+                onclick="nextPage()">
+
+            Next
+
+        </button>
+
+    </div>
 
 </div>
 
