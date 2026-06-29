@@ -64,6 +64,10 @@ public class AuthService {
             throw new BadRequestException("Invalid email or password");
         }
 
+        if(!user.isActive()){
+            throw new RuntimeException("user not active");
+        }
+
         String token = jwtService.generateToken(user);
 
         return AuthResponse.builder()

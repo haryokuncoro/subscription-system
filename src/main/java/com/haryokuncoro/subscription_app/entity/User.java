@@ -33,4 +33,7 @@ public class User extends BaseEntity {
     @Column(name = "stripe_customer_id", unique = true)
     private String stripeCustomerId;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
 }

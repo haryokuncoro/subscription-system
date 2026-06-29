@@ -39,6 +39,7 @@ public class UserService {
                 .fullName(user.getFullName())
                 .country(user.getCountry())
                 .stripeCustomerId(user.getStripeCustomerId())
+                .active(user.isActive())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
@@ -62,6 +63,7 @@ public class UserService {
                 .email(request.getEmail())
                 .fullName(request.getFullName())
                 .country(request.getCountry())
+                .active(true)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .build();
 
@@ -102,12 +104,10 @@ public class UserService {
 
     @Transactional
     public void delete(UUID id) {
-
-        if (!userRepository.existsById(id)) {
-            throw new NotFoundException("User not found");
-        }
-
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        user.setActive(false);
+        userRepository.save(user);
     }
 
 }

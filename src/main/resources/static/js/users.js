@@ -39,6 +39,7 @@ async function loadUsers() {
                 </small>
 
             </td>
+            <td>${user.active}</td>
 
             <td>
 

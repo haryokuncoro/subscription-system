@@ -16,7 +16,7 @@ CREATE TABLE users (
                        country VARCHAR(255),
 
                        stripe_customer_id VARCHAR(255) UNIQUE,
-
+                       active BOOLEAN NOT NULL DEFAULT TRUE,
 
                        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
