@@ -5,6 +5,7 @@ import com.haryokuncoro.subscription_app.dto.enums.InvoiceStatus;
 import com.haryokuncoro.subscription_app.dto.spec.InvoiceSpecification;
 import com.haryokuncoro.subscription_app.entity.Invoice;
 import com.haryokuncoro.subscription_app.entity.Subscription;
+import com.haryokuncoro.subscription_app.entity.User;
 import com.haryokuncoro.subscription_app.exception.NotFoundException;
 import com.haryokuncoro.subscription_app.repository.InvoiceRepository;
 import com.haryokuncoro.subscription_app.repository.SubscriptionRepository;
@@ -15,9 +16,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -182,5 +187,47 @@ public class InvoiceService {
             case "void" -> InvoiceStatus.VOID;
             default -> throw new IllegalArgumentException("Unknown invoice status: " + stripeStatus);
         };
+    }
+
+    /**
+     * Download invoice PDF by invoice ID
+     * Verifies that the invoice belongs to the authenticated user
+     *
+     * @param invoiceId the invoice ID to download
+     * @return byte array containing the PDF content
+     * @throws NotFoundException if invoice not found or does not belong to user
+     * @throws IOException if PDF cannot be downloaded
+     */
+    public byte[] downloadInvoicePdf(UUID invoiceId) throws IOException {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new NotFoundException("Invoice not found with id: " + invoiceId));
+
+        // Verify that the invoice belongs to the current user
+        if (!invoice.getSubscription().getUser().getId().equals(currentUser.getId())) {
+            throw new NotFoundException("Invoice not found or access denied");
+        }
+
+        // Check if invoice PDF URL exists
+        if (invoice.getInvoicePdf() == null || invoice.getInvoicePdf().isEmpty()) {
+            throw new NotFoundException("Invoice PDF is not available");
+        }
+
+        // Download PDF from the URL
+        return downloadPdfFromUrl(invoice.getInvoicePdf());
+    }
+
+    /**
+     * Download PDF content from a URL
+     *
+     * @param pdfUrl the URL of the PDF
+     * @return byte array containing the PDF content
+     * @throws IOException if PDF cannot be downloaded
+     */
+    private byte[] downloadPdfFromUrl(String pdfUrl) throws IOException {
+        URL url = new URL(pdfUrl);
+        URLConnection connection = url.openConnection();
+        return connection.getInputStream().readAllBytes();
     }
 }
