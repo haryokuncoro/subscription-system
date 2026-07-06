@@ -11,6 +11,7 @@ import java.util.UUID;
 @Data @Builder
 public class GetInvoiceResponse {
     private UUID userId;
+    private UUID id;
     private String userName;
     private UUID subscriptionId;
 

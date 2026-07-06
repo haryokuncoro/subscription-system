@@ -95,14 +95,13 @@ function renderTable(pageData) {
 
                 ${
             invoice.invoicePdf
-                ? `<a
-                           href="${invoice.invoicePdf}"
-                           target="_blank"
-                           class="btn btn-sm btn-primary">
+                ? `<button
+                           class="btn btn-sm btn-primary"
+                           onclick="downloadInvoice('${invoice.id}','${invoice.invoiceNumber || invoice.stripeInvoiceId}')">
 
-                           PDF
+                           Download
 
-                       </a>`
+                       </button>`
                 : "-"
         }
 
@@ -113,6 +112,27 @@ function renderTable(pageData) {
         `;
 
     });
+
+}
+
+async function downloadInvoice(id, filenameHint) {
+
+    try {
+        const blob = await apiDownload(`/api/invoices/${id}/download`);
+
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${filenameHint}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+    } catch (e) {
+        alert(e.message || 'Failed to download invoice');
+    }
 
 }
 

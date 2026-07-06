@@ -46,3 +46,31 @@ function logout() {
     sessionStorage.clear();
     window.location = "/login";
 }
+
+async function apiDownload(url) {
+
+    const headers = {
+        Authorization: `Bearer ${getToken()}`
+    };
+
+    const response = await fetch(BASE_URL + url, { headers });
+
+    if (response.status === 401 || response.status === 403) {
+        sessionStorage.clear();
+        window.location = "/login";
+        return;
+    }
+
+    if (!response.ok) {
+        let message = "Request failed";
+        try {
+            const error = await response.json();
+            message = error.message || message;
+        } catch (e) {}
+        throw new Error(message);
+    }
+
+    // return blob for binary content
+    return response.blob();
+
+}
