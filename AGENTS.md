@@ -17,7 +17,14 @@ Environment & secrets (how config is loaded)
 - Important env vars:
   - `JWT_SECRET`, `STRIPE_API_KEY_SG`, `STRIPE_API_KEY_HK`, `STRIPE_API_KEY_MY`
   - `STRIPE_WEBHOOK_SECRET`, `STRIPE_SKIP_SIGNATURE_CHECK` (true/false), `STRIPE_MOCK_ENABLED`, `STRIPE_MOCK_BASE_URL`
-- The project includes `spring-dotenv` so a `.env` file at project root will be picked up in dev.
+ - The project can read secrets from environment variables. For local convenience `spring-dotenv` will pick up a `.env` file if present.
+  - The `docker-compose.yml` uses shell-style substitution (`${VAR:-default}`) so variables can be provided by the environment at runtime (CI/CD, systemd, ECS task definition, AWS SSM parameter injection) or fall back to safe defaults for local development.
+  - Keep `.env` out of VCS. Use `.env.example` with placeholders (already added) as a template.
+
+Tips for servers and CI/CD:
+- AWS: inject parameters into your container runtime (ECS task definition environmentVariables, or use SSM Parameter Store/Secrets Manager coupled with your deployment tool) — Compose itself does not fetch SSM values automatically; you must provide them in the runtime environment.
+- For systemd or Docker on a host, export the variables in the shell that runs `docker compose up` or put them in a systemd unit EnvironmentFile.
+- For production, consider Docker secrets or an external secret manager instead of plaintext `.env` files.
 
 Stripe specifics (critical integration points)
 - Stripe configuration classes:

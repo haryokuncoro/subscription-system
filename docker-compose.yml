@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: subscription_system
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d subscription_system"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  stripe-mock:
+    image: stripe/stripe-mock:latest
+    ports:
+      - "12111:12111"
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://db:5432/subscription_system}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret}
+      STRIPE_API_KEY_SG: ${STRIPE_API_KEY_SG:-sk_test_sg}
+      STRIPE_API_KEY_HK: ${STRIPE_API_KEY_HK:-sk_test_hk}
+      STRIPE_API_KEY_MY: ${STRIPE_API_KEY_MY:-sk_test_my}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_test}
+      STRIPE_SKIP_SIGNATURE_CHECK: ${STRIPE_SKIP_SIGNATURE_CHECK:-"true"}
+      STRIPE_MOCK_ENABLED: ${STRIPE_MOCK_ENABLED:-"true"}
+      STRIPE_MOCK_BASE_URL: ${STRIPE_MOCK_BASE_URL:-http://stripe-mock:12111}
+    depends_on:
+      - db
+      - stripe-mock
+
+volumes:
+  db-data:
+
