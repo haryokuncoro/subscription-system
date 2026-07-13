@@ -21,7 +21,7 @@ public class SeedController {
     public ApiResponse<Void> seedBasicData() {
         seedService.seedData();
         return ApiResponse.success(
-                "Date seeded successfully"
+                "seeded users, plans, subscriptions successfully"
         );
     }
 
@@ -30,7 +30,7 @@ public class SeedController {
     public ApiResponse<Void> seedInvoice() {
         seedService.seedInvoice();
         return ApiResponse.success(
-                "Date seeded successfully"
+                "seeded invoices successfully"
         );
     }
 

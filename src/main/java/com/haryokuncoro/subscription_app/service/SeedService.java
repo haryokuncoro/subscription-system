@@ -133,6 +133,7 @@ public class SeedService {
                     .amountPaid(total)
                     .stripeInvoiceId(String.format("inv_%04d", i++))
                     .currency("SGD")
+                    .invoicePdf("https://slicedinvoices.com/pdf/wordpress-pdf-invoice-plugin-sample.pdf")
                     .periodStart(Instant.now())
                     .periodEnd(Instant.now().plus(30, ChronoUnit.DAYS))
                     .paidAt(Instant.now())

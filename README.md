@@ -50,29 +50,63 @@ All other endpoints require authentication.
 
 # Running
 
-Configure PostgreSQL and Stripe in `application.yml`.
+## With Docker (recommended)
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/subscription
-    username: postgres
-    password: postgres
+**1. Copy the environment template and fill in your secrets:**
 
-stripe:
-  api-key: sk_test_xxxxxxxxx
-  webhook-secret: whsec_xxxxxxxxx
-
-jwt:
-  secret: your-secret-key
-  expiration: 86400000
+```bash
+cp .env.example .env
+# edit .env with real values
 ```
 
-Run Flyway migration.
+The `.env` file is gitignored. At minimum set:
 
+| Variable | Description |
+|---|---|
+| `SPRING_PROFILES_ACTIVE` | Use `local` to load `application-local.properties` |
+| `SPRING_DATASOURCE_URL` | e.g. `jdbc:postgresql://db:5432/subscription_system` |
+| `SPRING_DATASOURCE_USERNAME` | Postgres user |
+| `SPRING_DATASOURCE_PASSWORD` | Postgres password |
+| `JWT_SECRET` | Random secret string for signing JWT tokens |
+| `STRIPE_API_KEY_SG` / `_HK` / `_MY` | Stripe secret keys per region |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
+| `STRIPE_SKIP_SIGNATURE_CHECK` | `true` for local dev, `false` in production |
+| `STRIPE_MOCK_ENABLED` | `true` to use stripe-mock, `false` for real Stripe |
+| `STRIPE_MOCK_BASE_URL` | e.g. `http://stripe-mock:12111` when mock is enabled |
+
+**2. Build and start all services (Postgres + stripe-mock + app):**
+
+```bash
+docker compose up --build
 ```
-./mvnw spring-boot:run
+
+The app will be available at `http://localhost:8080`.
+
+Flyway migrations run automatically on startup. Swagger UI: `http://localhost:8080/swagger-ui.html`.
+
+**Stop and remove containers:**
+
+```bash
+docker compose down
 ```
+
+To also remove the database volume:
+
+```bash
+docker compose down -v
+```
+
+---
+
+## Local Development (without Docker)
+
+Requires a running PostgreSQL instance on `localhost:5433` (or adjust `application-local.properties`).
+
+```bash
+./gradlew bootRun
+```
+
+Secrets are read from environment variables. For convenience, `spring-dotenv` will pick up a `.env` file in the project root automatically.
 
 ---
 
