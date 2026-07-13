@@ -209,6 +209,89 @@ async function edit(id) {
 
 }
 
+
+function openCreateModal() {
+
+
+    document.getElementById("modalTitle").innerText = "Create Subscription";
+
+    document.getElementById("id").value = "";
+
+    document.getElementById("currentPeriodStart").value = "";
+
+    document.getElementById("currentPeriodEnd").value = "";
+
+    document.getElementById("cancelAtPeriodEnd").checked = false;
+
+    modal.show();
+
+}
+
+
+async function save() {
+
+    const id = document.getElementById("id").value;
+
+    const currentPeriodStart =
+        document.getElementById("currentPeriodStart").value;
+
+    const currentPeriodEnd =
+        document.getElementById("currentPeriodEnd").value;
+
+    const body = {
+
+        userId: document.getElementById("userId").value,
+
+        planId: document.getElementById("planId").value,
+
+        currentPeriodStart:
+        currentPeriodStart ? new Date(currentPeriodStart).toISOString() : null,
+
+        currentPeriodEnd:
+        currentPeriodEnd ? new Date(currentPeriodEnd).toISOString() : null,
+
+        cancelAtPeriodEnd:
+        document.getElementById("cancelAtPeriodEnd").checked
+
+    };
+
+    try {
+
+        if (id) {
+
+            await api(`/api/subscriptions/${id}`, {
+
+                method: "PUT",
+
+                body: JSON.stringify(body)
+
+            });
+
+        } else {
+
+            await api("/api/subscriptions", {
+
+                method: "POST",
+
+                body: JSON.stringify(body)
+
+            });
+
+        }
+
+        modal.hide();
+
+        await searchSubscriptions();
+
+    } catch (e) {
+
+        alert(e.message);
+
+    }
+
+}
+
+
 async function removeSubscription(id) {
 
     const immediately = confirm(

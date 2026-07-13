@@ -3,11 +3,12 @@ package com.haryokuncoro.subscription_app.dto;
 import com.haryokuncoro.subscription_app.dto.enums.SubscriptionStatus;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
 
-@Getter
+@Getter @Setter
 @Builder
 public class SubscriptionResponse {
 
@@ -22,6 +23,8 @@ public class SubscriptionResponse {
     private String planName;
 
     private String stripeSubscriptionId;
+
+    private String stripeClientSecret;
 
     private SubscriptionStatus status;
 

@@ -1,12 +1,9 @@
 package com.haryokuncoro.subscription_app.service;
 
-import com.haryokuncoro.subscription_app.dto.GetInvoiceResponse;
 import com.haryokuncoro.subscription_app.dto.SubscriptionRequest;
 import com.haryokuncoro.subscription_app.dto.SubscriptionResponse;
 import com.haryokuncoro.subscription_app.dto.enums.SubscriptionStatus;
-import com.haryokuncoro.subscription_app.dto.spec.InvoiceSpecification;
 import com.haryokuncoro.subscription_app.dto.spec.SubscriptionSpecification;
-import com.haryokuncoro.subscription_app.entity.Invoice;
 import com.haryokuncoro.subscription_app.entity.Plan;
 import com.haryokuncoro.subscription_app.entity.Subscription;
 import com.haryokuncoro.subscription_app.entity.User;
@@ -24,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Service @RequiredArgsConstructor @Slf4j
@@ -102,7 +98,7 @@ public class SubscriptionService {
 
         com.stripe.model.Subscription stripeSubscription =
                 stripeService.createSubscription(user.getStripeCustomerId(), plan.getCountry(), plan.getStripePriceId());
-
+        String clientSecret = stripeSubscription.getLatestInvoiceObject().getConfirmationSecret().getClientSecret();
         Subscription subscription = Subscription.builder()
                 .user(user)
                 .plan(plan)
@@ -115,7 +111,9 @@ public class SubscriptionService {
 
         subscriptionRepository.save(subscription);
 
-        return this.toResponse(subscription);
+        SubscriptionResponse response = this.toResponse(subscription);
+        response.setStripeClientSecret(clientSecret);
+        return response;
     }
 
     private SubscriptionStatus mapStripeStatus(String stripeStatus) {

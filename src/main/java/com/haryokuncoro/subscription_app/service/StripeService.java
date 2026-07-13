@@ -195,7 +195,8 @@ public class StripeService {
                                     .build()
                     )
                     .setPaymentBehavior(SubscriptionCreateParams.PaymentBehavior.DEFAULT_INCOMPLETE)
-                    .addAllExpand(List.of("latest_invoice.payment_intent"))
+                    .setCollectionMethod(SubscriptionCreateParams.CollectionMethod.CHARGE_AUTOMATICALLY)
+                    .addExpand("latest_invoice.confirmation_secret")
                     .build();
 
             return com.stripe.model.Subscription.create(params, options);
