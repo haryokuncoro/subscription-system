@@ -216,13 +216,7 @@ public class InvoiceService {
         return downloadPdfFromUrl(invoice.getInvoicePdf());
     }
 
-    /**
-     * Download PDF content from a URL
-     *
-     * @param pdfUrl the URL of the PDF
-     * @return byte array containing the PDF content
-     * @throws IOException if PDF cannot be downloaded
-     */
+
     private byte[] downloadPdfFromUrl(String pdfUrl) throws IOException {
         URL url = new URL(pdfUrl);
         URLConnection connection = url.openConnection();
