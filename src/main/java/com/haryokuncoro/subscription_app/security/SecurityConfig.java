@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/api/auth/**",
+                                "/actuator/**",
                                 "/api/webhooks/**",
                                 "/api/seed/**",
                                 "/v3/api-docs/**",
