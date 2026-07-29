@@ -1,0 +1,33 @@
+<configuration>
+
+    <springProperty name="appName" source="spring.application.name" defaultValue="springboot-app"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %5p [${appName},%X{trace_id:-},%X{span_id:-}] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+        <http>
+            <url>http://loki:3100/loki/api/v1/push</url>
+        </http>
+        <format>
+            <label>
+                <!-- keep this label set small - Loki is not built for high-cardinality labels -->
+                <pattern>app=${appName},level=%level</pattern>
+            </label>
+            <message>
+                <pattern>
+                    {"timestamp":"%d{ISO8601}","level":"%level","logger":"%logger","thread":"%thread","trace_id":"%X{trace_id:-}","span_id":"%X{span_id:-}","message":"%message"}
+                </pattern>
+            </message>
+        </format>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="LOKI"/>
+    </root>
+
+</configuration>
