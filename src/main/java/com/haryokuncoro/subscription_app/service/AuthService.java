@@ -59,13 +59,18 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    log.error("fail to login, user not found. {}", request);
+                    throw new NotFoundException("User not found");
+                } );
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            log.error("fail to login, invalid email or password. {}", request);
             throw new BadRequestException("Invalid email or password");
         }
 
         if(!user.isActive()){
+            log.error("fail to login, inactive user. {}", request);
             throw new RuntimeException("user not active");
         }
 
