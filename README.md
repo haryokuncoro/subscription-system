@@ -1,5 +1,5 @@
+<img alt="swagger-ui screenshot" src="images/swagger-ui.png">
 # Subscription System API
-
 A Spring Boot REST API for managing users, subscription plans, subscriptions, and Stripe webhook synchronization.
 
 ## Tech Stack
